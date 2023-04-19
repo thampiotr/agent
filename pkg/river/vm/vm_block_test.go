@@ -647,6 +647,8 @@ func BenchmarkWithType(b *testing.B) {
 	var actual OuterBlock
 	for i := 0; i < b.N; i++ {
 		require.NoError(b, eval.Evaluate(nil, &actual))
+		require.True(b, actual.Settings.Called)
+		actual.Settings.Called = false
 	}
 }
 func BenchmarkWithoutType(b *testing.B) {
@@ -669,6 +671,8 @@ func BenchmarkWithoutType(b *testing.B) {
 	var actual OuterBlock
 	for i := 0; i < b.N; i++ {
 		require.NoError(b, eval.Evaluate(nil, &actual))
+		require.True(b, actual.Settings.Called)
+		actual.Settings.Called = false
 	}
 }
 
@@ -790,6 +794,7 @@ type SettingA struct {
 
 func (s *SettingA) UnmarshalRiver(f func(interface{}) error) error {
 	s.Called = true
+	s.FieldA, s.FieldB = "", ""
 	type setting SettingA
 	return f((*setting)(s))
 }
@@ -803,7 +808,8 @@ type SettingB struct {
 
 func (s *SettingB) UnmarshalRiver(f func(interface{}) error) error {
 	s.Called = true
-	return f(&s)
+	s.FieldA, s.FieldB = "", ""
+	return f(s)
 }
 
 func parseBlock(t *testing.T, input string) *ast.BlockStmt {

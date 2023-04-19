@@ -90,11 +90,16 @@ func (vm *Evaluator) evaluateBlockOrBody(scope *Scope, assoc map[value.Value]ast
 			rv := reflect.ValueOf(v)
 			if rv.Kind() != reflect.Pointer {
 				panic(fmt.Sprintf("river/vm: expected pointer, got %s", rv.Kind()))
+			} else {
+				return vm.evaluateBlockOrBodyAfterUnmarshal(scope, assoc, node, rv.Elem())
 			}
-			return vm.evaluateBlockOrBody(scope, assoc, node, rv.Elem())
 		})
 	}
 
+	return vm.evaluateBlockOrBodyAfterUnmarshal(scope, assoc, node, rv)
+}
+
+func (vm *Evaluator) evaluateBlockOrBodyAfterUnmarshal(scope *Scope, assoc map[value.Value]ast.Node, node ast.Node, rv reflect.Value) error {
 	// Fully deference rv and allocate pointers as necessary.
 	for rv.Kind() == reflect.Pointer {
 		if rv.IsNil() {
